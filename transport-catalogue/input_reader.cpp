@@ -124,5 +124,16 @@ namespace catalogue {
             }
         }
 
+        void InputReader::Read(std::istream& input) {
+            int base_request_count;
+            input >> base_request_count >> std::ws;
+
+            for (int i = 0; i < base_request_count; ++i) {
+                std::string line;
+                std::getline(input, line);
+                ParseLine(line);
+            }
+        }
+
     } //namespace input
 } //namespace catalogue

@@ -33,13 +33,13 @@ namespace catalogue {
 	class TransportCatalogue {
 	public:
 		void AddStop(const std::string& name, geo::Coordinates coordinates);
-		void AddBus(const std::string& number, std::vector<std::string> stops);
+		void AddBus(const std::string& number, const std::vector<std::string>& stops);
 
-		const Stop* FindStop(const std::string& stop) const;
-		const Bus* FindBus(const std::string& bus) const;
+		const Stop* FindStop(std::string_view stop) const;
+		const Bus* FindBus(std::string_view bus) const;
 
-		BusInfo GetBusInfo(const std::string& bus) const;
-		std::set<std::string> GetBusesByStop(const std::string& stop) const;
+		BusInfo GetBusInfo(std::string_view bus) const;
+		std::set<std::string> GetBusesByStop(std::string_view stop) const;
 	private:
 		std::deque<Stop> stops_;
 		std::deque<Bus> buses_;

@@ -10,24 +10,10 @@ using namespace catalogue;
 int main() {
     TransportCatalogue catalogue;
 
-    int base_request_count;
-    cin >> base_request_count >> ws;
+    input::InputReader reader;
+    reader.Read(cin);
+    reader.ApplyCommands(catalogue);
 
-    {
-        input::InputReader reader;
-        for (int i = 0; i < base_request_count; ++i) {
-            string line;
-            getline(cin, line);
-            reader.ParseLine(line);
-        }
-        reader.ApplyCommands(catalogue);
-    }
-
-    int stat_request_count;
-    cin >> stat_request_count >> ws;
-    for (int i = 0; i < stat_request_count; ++i) {
-        string line;
-        getline(cin, line);
-        output::ParseAndPrintStat(catalogue, line, cout);
-    }
+    output::RequestsHandler requests_handler(catalogue, cin, cout);
+    requests_handler.HandleAllRequests();
 }

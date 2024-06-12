@@ -21,8 +21,22 @@ namespace catalogue {
             std::string description;  // Параметры команды
         };
 
-        void ParseAndPrintStat(const TransportCatalogue& tansport_catalogue, std::string_view request,
-            std::ostream& output);
+        CommandDescription ParseCommandDescription(std::string_view request);
 
+        class RequestsHandler {
+        public:
+            RequestsHandler(const TransportCatalogue& catalogue, std::istream& input, std::ostream& output);
+
+            void HandelStopRequest(const std::string& description);
+            void HandelBusRequest(const std::string& description);
+
+            void ParseAndHandleRequest(std::string_view request);
+
+            void HandleAllRequests();
+        private:
+            const TransportCatalogue& catalogue_;
+            std::istream& input_;
+            std::ostream& output_;
+        };
     } //namespace output
 } //namespace catalogue

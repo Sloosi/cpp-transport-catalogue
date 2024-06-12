@@ -1,4 +1,5 @@
 #pragma once
+#include <iostream>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -27,6 +28,8 @@ namespace catalogue {
         public:
             void ParseLine(std::string_view line);
             void ApplyCommands(TransportCatalogue& catalogue) const;
+
+            void Read(std::istream& input);
 
         private:
             std::vector<CommandDescription> stop_commands_;

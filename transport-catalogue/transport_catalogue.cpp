@@ -7,7 +7,7 @@ namespace catalogue {
 		stops_as_catalogue_.insert({ stops_.back().name, &stops_.back() });
 	}
 
-	void TransportCatalogue::AddBus(const std::string& number, std::vector<std::string> stops) {
+	void TransportCatalogue::AddBus(const std::string& number, const std::vector<std::string>& stops) {
 		buses_.push_back({ number, stops });
 		buses_as_catalogue_.insert({ buses_.back().number, &buses_.back() });
 
@@ -16,28 +16,28 @@ namespace catalogue {
 		}
 	}
 
-	const Stop* TransportCatalogue::FindStop(const std::string& stop) const {
+	const Stop* TransportCatalogue::FindStop(std::string_view stop) const {
 		return stops_as_catalogue_.count(stop) ? stops_as_catalogue_.at(stop) : nullptr;
 	}
 
-	const Bus* TransportCatalogue::FindBus(const std::string& bus) const {
+	const Bus* TransportCatalogue::FindBus(std::string_view bus) const {
 		return buses_as_catalogue_.count(bus) ? buses_as_catalogue_.at(bus) : nullptr;
 	}
 
-	std::set<std::string> TransportCatalogue::GetBusesByStop(const std::string& stop) const {
+	std::set<std::string> TransportCatalogue::GetBusesByStop(std::string_view stop) const {
 		if (stops_as_catalogue_.count(stop) == 0) {
-			throw std::invalid_argument("Stop " + stop + ": not found");
+			throw std::invalid_argument("Stop " + std::string(stop) + ": not found");
 		}
 
 		return stops_as_catalogue_.at(stop)->buses;
 	}
 
-	BusInfo TransportCatalogue::GetBusInfo(const std::string& bus) const {
+	BusInfo TransportCatalogue::GetBusInfo(std::string_view bus) const {
 		BusInfo bus_info = {};
 
 		const Bus* bus_ptr = FindBus(bus);
 		if (bus_ptr == nullptr) {
-			throw std::invalid_argument("Bus " + bus + ": not found");
+			throw std::invalid_argument("Bus " + std::string(bus) + ": not found");
 		}
 
 		{ //calculate total length
@@ -52,7 +52,7 @@ namespace catalogue {
 		}
 
 		bus_info.stops_count = bus_ptr->stops.size();
-		bus_info.unique_stops_count = UniqueStopsCount(bus);
+		bus_info.unique_stops_count = UniqueStopsCount(std::string(bus));
 
 		return bus_info;
 	}
