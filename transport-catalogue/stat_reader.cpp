@@ -51,7 +51,8 @@ namespace catalogue {
                 output_ << "Bus " << description << ": "
                     << bus_info.stops_count << " stops on route, "
                     << bus_info.unique_stops_count << " unique stops, "
-                    << bus_info.route_length << " route length" << std::endl;
+                    << bus_info.route_length << " route length, "
+                    << bus_info.curvature << " curvature" << std::endl;
             }
             catch (const std::invalid_argument& e) {
                 output_ << e.what() << std::endl;

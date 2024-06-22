@@ -28,15 +28,26 @@ namespace catalogue {
 		size_t stops_count = 0;
 		size_t unique_stops_count = 0;
 		double route_length = 0.0;
+		double geo_route_length = 0.0;
+		double curvature = 0.0;
+	};
+
+	struct StopPairHasher {
+		static const size_t salt = 37;
+
+		size_t operator()(const std::pair<const Stop*, const Stop*>& stops) const;
 	};
 
 	class TransportCatalogue {
 	public:
 		void AddStop(const std::string& name, geo::Coordinates coordinates);
-		void AddBus(const std::string& number, const std::vector<std::string>& stops);
+		void AddRoute(const std::string& number, const std::vector<std::string>& stops);
 
 		const Stop* FindStop(std::string_view stop) const;
 		const Bus* FindBus(std::string_view bus) const;
+		
+		double GetDistance(const Stop* a, const Stop* b) const;
+		void AddDistance(const std::pair<const Stop*, const Stop*>& stops, int distance);
 
 		BusInfo GetBusInfo(std::string_view bus) const;
 		std::set<std::string> GetBusesByStop(std::string_view stop) const;
@@ -46,6 +57,8 @@ namespace catalogue {
 
 		std::unordered_map<std::string_view, Stop*> stops_as_catalogue_;
 		std::unordered_map<std::string_view, Bus*> buses_as_catalogue_;
+
+		std::unordered_map<std::pair<const Stop*, const Stop*>, int, StopPairHasher> distances_;
 
 		size_t UniqueStopsCount(const std::string& bus) const;
 	};
