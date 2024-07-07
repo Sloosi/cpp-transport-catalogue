@@ -1,19 +1,20 @@
 #include <iostream>
 
 #include "transport_catalogue.h"
-#include "input_reader.h"
-#include "stat_reader.h"
+#include "map_renderer.h"
+#include "json_reader.h"
+#include "request_handler.h"
 
 using namespace std;
-using namespace catalogue;
+using namespace transport_catalogue;
 
 int main() {
     TransportCatalogue catalogue;
+    renderer::MapRenderer map_renderer;
+    json_reader::JsonReader requests(std::cin);
+    requests.FillCatalogue(catalogue);
+    requests.FillRenderSettings(map_renderer);
 
-    input::InputReader reader;
-    reader.Read(cin);
-    reader.ApplyCommands(catalogue);
-
-    output::RequestsHandler requests_handler(catalogue, cin, cout);
-    requests_handler.HandleAllRequests();
+    request_handler::RequestHandler handler(requests, catalogue, map_renderer);
+    handler.ProcessRequests();
 }
