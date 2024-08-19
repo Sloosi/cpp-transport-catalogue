@@ -37,16 +37,19 @@ void RequestHandler::ProcessRequests() const {
             result.push_back(PrintStop(request_map).AsDict());
         }
         if (type == "Bus") {
-            result.push_back(PrintRoute(request_map).AsDict());
+            result.push_back(PrintBus(request_map).AsDict());
         }
         if (type == "Map") {
             result.push_back(PrintMap(request_map).AsDict());
+        }
+        if (type == "Route") {
+            result.push_back(PrintRoute(request_map).AsDict());
         }
     }
     json::Print(json::Document{ result }, std::cout);
 }
 
-const json::Node RequestHandler::PrintRoute(const json::Dict& request_map) const {
+const json::Node RequestHandler::PrintBus(const json::Dict& request_map) const {
     json::Node result;
     const std::string& route_number = request_map.at("name").AsString();
     const int id = request_map.at("id").AsInt();
@@ -112,13 +115,67 @@ const json::Node RequestHandler::PrintMap(const json::Dict& request_map) const {
     std::ostringstream out;
     map.Render(out);
 
-
     result = json::Builder{}
             .StartDict()
                 .Key("request_id").Value(id)
                 .Key("map").Value(out.str())
             .EndDict()
         .Build();
+
+    return result;
+}
+
+const json::Node request_handler::RequestHandler::PrintRoute(const json::Dict& request_map) const {
+    json::Node result;
+    const int id = request_map.at("id"s).AsInt();
+    const std::string_view from = request_map.at("from"s).AsString();
+    const std::string_view to = request_map.at("to"s).AsString();
+    const auto& routing = router_.BuildRouter(from, to);
+
+    if (!routing) {
+        result = json::Builder{}
+                .StartDict()
+                    .Key("request_id"s).Value(id)
+                    .Key("error_message"s).Value("not found"s)
+                .EndDict()
+            .Build();
+    }
+    else {
+        const auto& graph = router_.GetGraph();
+        json::Array items;
+        items.reserve(routing.value().edges.size());
+
+        for (const auto& edge : routing->edges) {
+            const auto& edge_info = graph.GetEdge(edge);
+            auto wait_time = router_.GetRouterSettings().bus_wait_time;
+
+            items.emplace_back(json::Node(json::Builder{}
+                    .StartDict()
+                        .Key("stop_name"s).Value(std::string(router_.GetStopNameFromID(edge_info.from)))
+                        .Key("time"s).Value(wait_time)
+                        .Key("type"s).Value("Wait"s)
+                    .EndDict()
+                .Build()
+            ));
+            items.emplace_back(json::Node(json::Builder{}
+                .StartDict()
+                    .Key("bus"s).Value(std::string(edge_info.weight.bus_name))
+                    .Key("span_count"s).Value(edge_info.weight.span_count)
+                    .Key("time"s).Value(edge_info.weight.total_time - wait_time)
+                    .Key("type"s).Value("Bus"s)
+                .EndDict()
+                .Build()
+            ));
+        }
+
+        result = json::Builder{}
+                .StartDict()
+                    .Key("request_id"s).Value(id)
+                    .Key("total_time"s).Value(routing->weight.total_time)
+                    .Key("items"s).Value(items)
+                .EndDict()
+            .Build();
+    }
 
     return result;
 }

@@ -21,7 +21,7 @@ namespace transport_catalogue {
 
 		const Stop* FindStop(std::string_view stop) const;
 		const Bus* FindRoute(std::string_view bus) const;
-		
+
 		double GetDistance(const Stop* a, const Stop* b) const;
 		void SetDistance(const std::pair<const Stop*, const Stop*>& stops, int distance);
 

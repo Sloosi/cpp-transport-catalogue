@@ -3,6 +3,7 @@
 #include "json.h"
 #include "transport_catalogue.h"
 #include "map_renderer.h"
+#include "transport_router.h"
 
 #include <iostream>
 
@@ -20,9 +21,12 @@ namespace json_reader {
         const json::Node& GetBaseRequests() const;
         const json::Node& GetStatRequests() const;
         const json::Node& GetRenderSettings() const;
+        const json::Node& GetRouterSettings() const;
 
         void FillCatalogue(transport_catalogue::TransportCatalogue& catalogue);
         void FillRenderSettings(renderer::MapRenderer& map_renderer) const;
+        
+        transport_router::RouterSettings ParseRouterSettings() const;
 
     private:
         json::Document input_;

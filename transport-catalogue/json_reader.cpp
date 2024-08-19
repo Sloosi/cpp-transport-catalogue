@@ -1,6 +1,7 @@
 #include "json_reader.h"
 
 using namespace transport_catalogue;
+using namespace transport_router;
 using namespace json_reader;
 
 namespace {
@@ -62,6 +63,13 @@ const json::Node& JsonReader::GetRenderSettings() const {
     return input_.GetRoot().AsDict().at("render_settings");
 }
 
+const json::Node& json_reader::JsonReader::GetRouterSettings() const {
+    if (!input_.GetRoot().AsDict().count("routing_settings")) {
+        return dummy_;
+    }
+    return input_.GetRoot().AsDict().at("routing_settings");
+}
+
 void JsonReader::FillCatalogue(TransportCatalogue& catalogue) {
     const json::Array& arr = GetBaseRequests().AsArray();
     for (auto& request_stops : arr) {
@@ -72,6 +80,7 @@ void JsonReader::FillCatalogue(TransportCatalogue& catalogue) {
             catalogue.AddStop(std::string(stop_name), coordinates);
         }
     }
+
     FillStopDistances(catalogue);
 
     for (auto& request_bus : arr) {
@@ -111,6 +120,22 @@ void JsonReader::FillRenderSettings(renderer::MapRenderer& map_renderer) const {
 
     map_renderer.SetRendererSettings(render_settings);
 }
+
+RouterSettings json_reader::JsonReader::ParseRouterSettings() const {
+    auto& request = GetRouterSettings();
+    if (request.IsNull()) {
+        return {0, 0};
+    }
+    auto& request_map = request.AsDict();
+
+    RouterSettings settings;
+    settings.bus_wait_time = request_map.at("bus_wait_time").AsDouble();
+    settings.bus_velocity = request_map.at("bus_velocity").AsDouble();
+
+    return settings;
+}
+
+
 
 JsonReader::StopData JsonReader::GetStopData(const json::Dict& request_map) const {
     std::string_view stop_name = request_map.at("name").AsString();
