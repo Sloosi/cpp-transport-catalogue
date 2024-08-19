@@ -22,27 +22,42 @@ namespace transport_router {
 		router_ = std::make_unique<graph::Router<RouteWeight>>(graph::Router(graph_));
 	}
 
-	std::optional <graph::Router<RouteWeight>::RouteInfo> TransportRouter::BuildRouter(std::string_view from, std::string_view to) const {
+	std::optional<RouteData> TransportRouter::BuildRouteData(std::string_view from, std::string_view to) const {
 		if (!router_) {
 			return std::nullopt;
 		}
-		return router_->BuildRoute(stopname_to_id_.at(from), stopname_to_id_.at(to));
-	}
 
-	const graph::DirectedWeightedGraph<RouteWeight>& TransportRouter::GetGraph() const {
-		return graph_;
-	}
+		const auto& route = router_->BuildRoute(stopname_to_id_.at(from), stopname_to_id_.at(to));
+		if (!route) {
+			return std::nullopt;
+		}
 
-	const std::unique_ptr<graph::Router<RouteWeight>>& TransportRouter::GetRouter() const {
-		return router_;
-	}
+		json::Array items;
+		items.reserve(route.value().edges.size());
 
-	const RouterSettings& TransportRouter::GetRouterSettings() const {
-		return settings_;
-	}
+		for (const auto& edge : route->edges) {
+			const auto& edge_info = graph_.GetEdge(edge);
+			auto wait_time = settings_.bus_wait_time;
 
-	const std::string_view TransportRouter::GetStopNameFromID(size_t id) const {
-		return id_to_stopname_.at(id);
+			items.emplace_back(json::Node(json::Builder{}
+				.StartDict()
+				.Key("stop_name"s).Value(std::string(id_to_stopname_.at(edge_info.from)))
+				.Key("time"s).Value(wait_time)
+				.Key("type"s).Value("Wait"s)
+				.EndDict()
+				.Build()
+			));
+			items.emplace_back(json::Node(json::Builder{}
+				.StartDict()
+				.Key("bus"s).Value(std::string(edge_info.weight.bus_name))
+				.Key("span_count"s).Value(edge_info.weight.span_count)
+				.Key("time"s).Value(edge_info.weight.total_time - wait_time)
+				.Key("type"s).Value("Bus"s)
+				.EndDict()
+				.Build()
+			));
+		}
+		return RouteData{ items, route->weight.total_time};
 	}
 
 	void TransportRouter::SetRouterSetting(RouterSettings settings) {

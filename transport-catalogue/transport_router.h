@@ -1,6 +1,7 @@
 #pragma once
 
 #include "transport_catalogue.h"
+#include "json_builder.h"
 #include "router.h"
 
 #include <memory>
@@ -21,20 +22,19 @@ namespace transport_router {
 		double bus_velocity = 0;
 	};
 
+	struct RouteData {
+		json::Array data;
+		double total_time;
+	};
+
 	class TransportRouter {
 	public:
 		TransportRouter() = default;
 		TransportRouter(const transport_catalogue::TransportCatalogue& catalogue, RouterSettings settings);
 
-		std::optional <graph::Router<RouteWeight>::RouteInfo> BuildRouter(std::string_view from, std::string_view to) const;
-
-		const graph::DirectedWeightedGraph<RouteWeight>& GetGraph() const;
-		const std::unique_ptr<graph::Router<RouteWeight>>& GetRouter() const;
-
-		const RouterSettings& GetRouterSettings() const;
-		const std::string_view GetStopNameFromID(size_t id) const;
-
 		void SetRouterSetting(RouterSettings settings);
+
+		std::optional<RouteData> BuildRouteData(std::string_view from, std::string_view to) const;
 
 	private:
 		size_t CountStops(const transport_catalogue::TransportCatalogue& catalogue);

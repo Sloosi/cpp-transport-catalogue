@@ -130,9 +130,9 @@ const json::Node request_handler::RequestHandler::PrintRoute(const json::Dict& r
     const int id = request_map.at("id"s).AsInt();
     const std::string_view from = request_map.at("from"s).AsString();
     const std::string_view to = request_map.at("to"s).AsString();
-    const auto& routing = router_.BuildRouter(from, to);
+    const auto& route = router_.BuildRouteData(from, to);
 
-    if (!routing) {
+    if (!route) {
         result = json::Builder{}
                 .StartDict()
                     .Key("request_id"s).Value(id)
@@ -141,38 +141,11 @@ const json::Node request_handler::RequestHandler::PrintRoute(const json::Dict& r
             .Build();
     }
     else {
-        const auto& graph = router_.GetGraph();
-        json::Array items;
-        items.reserve(routing.value().edges.size());
-
-        for (const auto& edge : routing->edges) {
-            const auto& edge_info = graph.GetEdge(edge);
-            auto wait_time = router_.GetRouterSettings().bus_wait_time;
-
-            items.emplace_back(json::Node(json::Builder{}
-                    .StartDict()
-                        .Key("stop_name"s).Value(std::string(router_.GetStopNameFromID(edge_info.from)))
-                        .Key("time"s).Value(wait_time)
-                        .Key("type"s).Value("Wait"s)
-                    .EndDict()
-                .Build()
-            ));
-            items.emplace_back(json::Node(json::Builder{}
-                .StartDict()
-                    .Key("bus"s).Value(std::string(edge_info.weight.bus_name))
-                    .Key("span_count"s).Value(edge_info.weight.span_count)
-                    .Key("time"s).Value(edge_info.weight.total_time - wait_time)
-                    .Key("type"s).Value("Bus"s)
-                .EndDict()
-                .Build()
-            ));
-        }
-
         result = json::Builder{}
                 .StartDict()
                     .Key("request_id"s).Value(id)
-                    .Key("total_time"s).Value(routing->weight.total_time)
-                    .Key("items"s).Value(items)
+                    .Key("total_time"s).Value(route->total_time)
+                    .Key("items"s).Value(route->data)
                 .EndDict()
             .Build();
     }
